@@ -28,8 +28,31 @@ class Action(Enum):
     # DIFF = 'diff'
 
 
+class _Hosting(BaseModel):
+    name: Optional[str] = None
+    url: Optional[HttpUrl] = None
+    username: Optional[str] = None
+    password: Optional[str] = None
+    note: Optional[str] = None
+
+
+class _Urls(BaseModel):
+    url: Optional[HttpUrl] = None
+    admin_url: Optional[HttpUrl] = None
+    username: Optional[str] = None
+    password: Optional[str] = None
+    note: Optional[str] = None
+
+
+class _Mysql(BaseModel):
+    username: Optional[str] = None
+    password: Optional[str] = None
+    db: Optional[str] = None
+    hostname: Optional[str] = None
+
+
 class _ControlPanel(BaseModel):
-    url: HttpUrl
+    url: Optional[HttpUrl] = None
     username: Optional[str] = None
     password: Optional[str] = None
     note: Optional[str] = None
@@ -38,7 +61,8 @@ class _ControlPanel(BaseModel):
 class _SSH(BaseModel):
     username: str
     password: Optional[str] = None
-    server: Union[IPvAnyAddress, AnyUrl]
+    # server: Union[IPvAnyAddress, AnyUrl]
+    server: str
     key: Optional[FilePath] = None
     port: Optional[int] = 22
 
@@ -50,7 +74,11 @@ class _Server(BaseModel):
     user: Optional[str] = None
     exclude: Optional[list] = None
     note: Optional[str] = None
-    # ssh: list[_SSH] = None
+    ssh: list[_SSH] = None
+    control_panels: list[_ControlPanel] = None
+    hosting: list[_Hosting] = None
+    urls: list[_Urls] = None
+    mysql: list[_Mysql] = None
 
 
 class _Project(BaseModel):
@@ -125,6 +153,60 @@ if config_info := load_yaml(CONFIG_FILE):
 
     servers = []
     for server_name in yaml_data.get("servers", []):
+
+        sshes = []
+        for ssh in yaml_data["servers"][server_name].get("ssh", []):
+            ssh_fields = {
+                "username": ssh["username"],
+                "password": ssh.get("password"),
+                "server": ssh["server"],
+                "key": ssh.get("key"),
+                "port": ssh.get("port"),
+            }
+            sshes.append(ssh_fields)
+
+        control_panels = []
+        for control_panel in yaml_data["servers"][server_name].get("control_panel", []):
+            control_panel_fields = {
+                "url": control_panel["url"],
+                "username": control_panel.get("username"),
+                "password": control_panel.get("password"),
+                "note": control_panel.get("note"),
+            }
+            control_panels.append(control_panel_fields)
+
+        hosting = []
+        for host in yaml_data["servers"][server_name].get("hosting", []):
+            hosting_fields = {
+                "name": host.get("name"),
+                "url": host.get("url"),
+                "username": host.get("username"),
+                "password": host.get("password"),
+                "note": host.get("note"),
+            }
+            hosting.append(hosting_fields)
+
+        urls = []
+        for url in yaml_data["servers"][server_name].get("urls", []):
+            url_fields = {
+                "url": url.get("url"),
+                "admin_url": url.get("admin_url"),
+                "username": url.get("username"),
+                "password": url.get("password"),
+                "note": url.get("note"),
+            }
+            urls.append(url_fields)
+
+        mysqls = []
+        for mysql in yaml_data["servers"][server_name].get("mysql", []):
+            mysql_fields = {
+                "username": mysql.get("username"),
+                "password": mysql.get("password"),
+                "db": mysql.get("db"),
+                "hostname": mysql.get("hostname"),
+            }
+            mysqls.append(mysql_fields)
+
         server = yaml_data["servers"][server_name]
         server_fields = {
             "name": server_name,
@@ -133,7 +215,11 @@ if config_info := load_yaml(CONFIG_FILE):
             "user": server.get("user"),
             "exclude": server.get("exclude"),
             "note": server.get("note"),
-            "ssh": server.get("ssh"),
+            "ssh": sshes,
+            "control_panels": control_panels,
+            "hosting": hosting,
+            "urls": urls,
+            "mysql": mysqls,
         }
         servers.append(server_fields)
 
@@ -151,7 +237,7 @@ if config_info := load_yaml(CONFIG_FILE):
     try:
         project = _Project(**project_fields)
     except ValidationError as e:
-        l.error(e)
+        l.error(e, exit=True)
 
 else:
     project = _NoProject()

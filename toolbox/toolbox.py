@@ -41,7 +41,7 @@ CONTEXT_SETTINGS = {
 )
 @click.version_option()
 def toolbox(suppress_commands):
-    """🧰 🛠 🛠️ Tools to manage projects.
+    """🛠  Tools to manage projects.
 
     Dev commands:
 
@@ -93,26 +93,24 @@ def database(ctx, action, sql_gz, server, quiet, real, tag):
     pulls_dir/projectname-servername-20-01-01_01-01-01.sql.gz
     """
 
-    pp(project.model_dump())
+    if not project.in_project:
+        l.error("Not in a project.", exit=True)
+    else:
+        l.info(f"Project: {project.name}")
+
+    # pp(project.model_dump())
 
     print("-" * 80)
 
-    # x = None
-    # x = [i for i in project.servers if i.name == "prod"][0]
-    # for server in project.servers:
-    #     if server.name == "prod":
-    #         x = server
-    # pp(x)
     try:
         x = project.get_server_by_name("prod")
     except IndexError as e:
-        l.error(e)
+        l.error(e, exit=True)
     except TypeError as e:
-        l.error(e)
+        l.error(e, exit=True)
 
     print(x.name, x.root)
 
-    DB = ""
     # db = DB(real=real, quiet=quiet)
     #
     # if action == Action.PULL.value:

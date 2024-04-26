@@ -1,3 +1,4 @@
+import functools
 import logging
 import sys
 from logging import Formatter
@@ -41,21 +42,20 @@ class _ColoredFormatter(logging.Formatter):
 
 
 class _Logger:
-    _instance = None
-
-    def __new__(cls, *args, **kwargs):
-        if not cls._instance:
-            cls._instance = super(_Logger, cls).__new__(cls, *args, **kwargs)
-        return cls._instance
-
     def __init__(self):
+        if not hasattr(self, "is_initialized"):
+            self.initialize_logger()
+
+    @functools.cache
+    def initialize_logger(self):
+
         if not hasattr(self, "is_initialized"):
             handler = logging.StreamHandler(sys.stdout)
 
             # if output is a terminal, use colored formatter else use plain formatter
             if sys.stdout.isatty():
                 formatter: ColoredFormatter = _ColoredFormatter(
-                    "%(levelname)s  %(message)s"
+                    "%(levelname)s %(message)s"
                 )
             else:
                 formatter: Formatter = logging.Formatter(
@@ -78,13 +78,11 @@ class _Logger:
     def warning(self, message: str) -> None:
         self.logger.warning(message)
 
-    def error(self, message: str) -> None:
+    def error(self, message: str, exit=False) -> None:
         self.logger.error(message)
-        sys.exit(1)
+        if exit:
+            sys.exit(1)
+        # raise Exception(message)
 
 
 l = _Logger()
-
-if __name__ == "__main__":
-    l = _Logger()
-    l.info("This is an info message.")

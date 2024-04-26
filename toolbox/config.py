@@ -4,6 +4,8 @@ from pathlib import Path
 from pprint import pp
 from typing import Union, Optional
 
+# import IPython; IPython.embed()
+
 import yaml
 from pydantic import (
     BaseModel,
@@ -112,6 +114,7 @@ class _NoProject:
 
 
 def load_yaml(config_file: os.PathLike) -> dict:
+    """Load the yaml file, and handle any errors."""
     try:
         with open(config_file) as f:
             data = yaml.safe_load(f)
@@ -152,6 +155,8 @@ if config_file:
 
         sshes = []
         for ssh in yaml_data["servers"][server_name].get("ssh", []):
+            if type(ssh) != dict:
+                l.error("ssh fields must be a dictionary.", exit=True)
             ssh_fields = {
                 "username": ssh["username"],
                 "password": ssh.get("password"),
@@ -163,6 +168,8 @@ if config_file:
 
         control_panels = []
         for control_panel in yaml_data["servers"][server_name].get("control_panel", []):
+            if type(control_panel) != dict:
+                l.error("control_panel fields must be a dictionary.", exit=True)
             control_panel_fields = {
                 "url": control_panel["url"],
                 "username": control_panel.get("username"),
@@ -173,6 +180,8 @@ if config_file:
 
         hosting = []
         for host in yaml_data["servers"][server_name].get("hosting", []):
+            if type(host) != dict:
+                l.error("hosting fields must be a dictionary.", exit=True)
             hosting_fields = {
                 "name": host.get("name"),
                 "url": host.get("url"),
@@ -184,6 +193,8 @@ if config_file:
 
         urls = []
         for url in yaml_data["servers"][server_name].get("urls", []):
+            if type(url) != dict:
+                l.error("url fields must be a dictionary.", exit=True)
             url_fields = {
                 "url": url.get("url"),
                 "admin_url": url.get("admin_url"),
@@ -195,6 +206,8 @@ if config_file:
 
         mysqls = []
         for mysql in yaml_data["servers"][server_name].get("mysql", []):
+            if type(mysql) != dict:
+                l.error("mysql fields must be a dictionary.", exit=True)
             mysql_fields = {
                 "username": mysql.get("username"),
                 "password": mysql.get("password"),
@@ -212,10 +225,10 @@ if config_file:
             "exclude": server.get("exclude"),
             "note": server.get("note"),
             "ssh": sshes,
-            "control_panels": control_panels,
-            "hosting": hosting,
-            "urls": urls,
             "mysql": mysqls,
+            "hosting": hosting,
+            "control_panels": control_panels,
+            "urls": urls,
         }
         servers.append(server_fields)
 
@@ -237,7 +250,6 @@ if config_file:
 
 else:
     project = _NoProject()
-
 
 if __name__ == "__main__":
     pp(project)

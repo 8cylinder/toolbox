@@ -1,0 +1,27 @@
+[tool.poetry]
+name = "toolbox"
+version = "0.1.0"
+description = "Toolbox is a command line tool for developers to help building websites."
+authors = ["Sheldon McGrandle <developer@8cylinder.com>"]
+license = "GPLv3"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+click = "^8.1.7"
+pydantic = "^2.7.0"
+plumbum = "^1.8.2"
+pyyaml = "^6.0.1"
+
+[tool.poetry.group.dev.dependencies]
+ipython = "^8.6.0"
+
+[tool.poetry.scripts]
+tb = "toolbox.toolbox:toolbox"
+tlb = "toolbox.toolbox:toolbox"
+toolb = "toolbox.toolbox:toolbox"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

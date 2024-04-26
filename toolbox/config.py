@@ -111,11 +111,7 @@ class _NoProject:
     in_project: bool = False
 
 
-def load_yaml(config_file):
-    config_file = find_config(config_file, os.curdir)
-    if not config_file:
-        return False
-
+def load_yaml(config_file: os.PathLike) -> dict:
     try:
         with open(config_file) as f:
             data = yaml.safe_load(f)
@@ -129,25 +125,25 @@ def load_yaml(config_file):
         else:
             l.error("Something went wrong while parsing the yaml file.")
 
-    return config_file, data
+    return data
 
 
-def find_config(config_file, cur):
+def find_config(config_file: os.PathLike, cur: os.PathLike) -> Union[bool, os.PathLike]:
     """Walk up the dir tree to find a config file"""
-    if cur == "/":
+    if str(cur) == "/":
         return False
     elif str(config_file) in os.listdir(cur):
         config_file = Path(cur, config_file)
         return config_file
     else:
-        cur = os.path.abspath(os.path.join(cur, ".."))
+        cur = Path(cur / "..").resolve()
         return find_config(config_file, cur)
 
 
-if config_info := load_yaml(CONFIG_FILE):
-    config_file = config_info[0]
+config_file = find_config(Path(CONFIG_FILE), Path(os.curdir))
+if config_file:
+    yaml_data = load_yaml(config_file)
     project_root = config_file.parent
-    yaml_data = config_info[1]
 
     project = yaml_data["project"]
 

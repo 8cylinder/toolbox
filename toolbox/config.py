@@ -98,8 +98,8 @@ class _Project(BaseModel):
     @classmethod
     def make_absolute(cls, v: str, info: ValidationInfo):
         if v is not None:
-            project_root = info.data["root"]
-            return project_root / v
+            root = info.data["root"]
+            return root / v
         return None
 
     def get_server_by_name(self, name: str) -> Optional[_Server]:
@@ -118,13 +118,13 @@ def load_yaml(config_file: os.PathLike) -> dict:
     try:
         with open(config_file) as f:
             data = yaml.safe_load(f)
-    except yaml.YAMLError as e:
-        if hasattr(e, "problem_mark"):
+    except yaml.YAMLError as ye:
+        if hasattr(ye, "problem_mark"):
             msg = "There was an error while parsing the config file"
-            if e.context is not None:
-                l.error(f"{msg}:\n{e.problem_mark}\n{e.problem} {e.context}.")
+            if ye.context is not None:
+                l.error(f"{msg}:\n{ye.problem_mark}\n{ye.problem} {ye.context}.")
             else:
-                l.error(f"{msg}:\n{e.problem_mark} {e.problem}.")
+                l.error(f"{msg}:\n{ye.problem_mark} {ye.problem}.")
         else:
             l.error("Something went wrong while parsing the yaml file.")
 
@@ -143,10 +143,10 @@ def find_config(config_file: os.PathLike, cur: os.PathLike) -> Union[bool, os.Pa
         return find_config(config_file, cur)
 
 
-config_file = find_config(Path(CONFIG_FILE), Path(os.curdir))
-if config_file:
-    yaml_data = load_yaml(config_file)
-    project_root = config_file.parent
+toolbox_config_file = find_config(Path(CONFIG_FILE), Path(os.curdir))
+if toolbox_config_file:
+    yaml_data = load_yaml(toolbox_config_file)
+    project_root = toolbox_config_file.parent
 
     project = yaml_data["project"]
 
@@ -155,7 +155,7 @@ if config_file:
 
         sshes = []
         for ssh in yaml_data["servers"][server_name].get("ssh", []):
-            if type(ssh) != dict:
+            if type(ssh) is dict:
                 l.error("ssh fields must be a dictionary.", exit=True)
             ssh_fields = {
                 "username": ssh["username"],
@@ -168,7 +168,7 @@ if config_file:
 
         control_panels = []
         for control_panel in yaml_data["servers"][server_name].get("control_panel", []):
-            if type(control_panel) != dict:
+            if type(control_panel) is dict:
                 l.error("control_panel fields must be a dictionary.", exit=True)
             control_panel_fields = {
                 "url": control_panel["url"],
@@ -180,7 +180,7 @@ if config_file:
 
         hosting = []
         for host in yaml_data["servers"][server_name].get("hosting", []):
-            if type(host) != dict:
+            if type(host) is dict:
                 l.error("hosting fields must be a dictionary.", exit=True)
             hosting_fields = {
                 "name": host.get("name"),
@@ -193,7 +193,7 @@ if config_file:
 
         urls = []
         for url in yaml_data["servers"][server_name].get("urls", []):
-            if type(url) != dict:
+            if type(url) is dict:
                 l.error("url fields must be a dictionary.", exit=True)
             url_fields = {
                 "url": url.get("url"),
@@ -206,7 +206,7 @@ if config_file:
 
         mysqls = []
         for mysql in yaml_data["servers"][server_name].get("mysql", []):
-            if type(mysql) != dict:
+            if type(mysql) is dict:
                 l.error("mysql fields must be a dictionary.", exit=True)
             mysql_fields = {
                 "username": mysql.get("username"),

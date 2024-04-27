@@ -35,32 +35,6 @@ class Transfer:
         remote = self._get_matching_remote(filename)
         self._rsync(action, filename, remote, extra_flags)
 
-    # def put(self, filename: os.PathLike, extra_flags: array = None):
-    #     pass
-    #
-    # def pull(self, filename: os.PathLike, extra_flags: array = None):
-    #     remote = self.get_remote(self.server.root, filename)
-    #     self._rsync(filename, remote, Action.PULL, extra_flags)
-
-    def __XXXXlocations(self, filename):
-        p = self.config.project()
-        # s = self.config.server(server)
-        s = self.server
-        local = filename
-        remote = str(local)
-        # remove the local project root from the file
-        remote = remote.replace(str(p.root.absolute()), ".")
-        # add the server root
-        try:
-            remote = Path(s.root, remote)
-        except TypeError:
-            ui.error(f"Server has no root ({s.servername}).")
-        file_locations = {
-            "local": local,
-            "remote": remote,
-        }
-        return file_locations
-
     def _get_matching_remote(self, filename: os.PathLike) -> os.PathLike:
         """Get the remote path that matches the local path."""
         remote = str(filename)
@@ -91,6 +65,9 @@ class Transfer:
             args += ["--rsh", f'"ssh -i {ssh.key}"']
 
         args += ["--links", "--compress", "--checksum", "--itemize-changes"]
+
+        if extra_flags:
+            args += extra_flags
 
         if ssh.port:
             # https://stackoverflow.com/a/4630407
